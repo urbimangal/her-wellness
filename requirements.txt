@@ -1,0 +1,10 @@
+# Combined requirements for all 3 AI/ML features
+# (AI Health Assistant Chatbot + Recommendation Engine + Menstrual Prediction)
+
+flask>=3.0
+python-dotenv>=1.0
+google-genai>=0.3
+numpy>=1.26
+pandas>=2.2
+scikit-learn>=1.4
+joblib>=1.3
