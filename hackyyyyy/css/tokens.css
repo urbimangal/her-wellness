@@ -1,0 +1,118 @@
+/* =========================================================
+   HerWellness — Design Tokens
+   A calm, botanical-apothecary palette: deep plum, soft coral,
+   sage green, warm gold — set in Fraunces + Manrope.
+   ========================================================= */
+
+:root {
+  /* Color */
+  --plum-900: #2E1330;
+  --plum-800: #3D1B3F;
+  --plum-700: #562355;
+  --plum-600: #7A3477;
+  --plum-500: #9C4B93;
+  --plum-100: #F3E7F1;
+
+  --coral-600: #E0725C;
+  --coral-500: #EC8E77;
+  --coral-100: #FBE6DF;
+
+  --sage-600: #5C8768;
+  --sage-500: #7FA88C;
+  --sage-100: #E3EEE6;
+
+  --gold-600: #B9832A;
+  --gold-500: #D9A441;
+  --gold-100: #F7EAD1;
+
+  --ink-900: #221A21;
+  --ink-700: #4A3E48;
+  --ink-500: #7C6E78;
+  --ink-300: #B3A6AE;
+
+  --bg-canvas: #FBF8FA;
+  --bg-surface: #FFFFFF;
+  --bg-sunken: #F5EEF3;
+  --line: #E9DEE6;
+  --line-soft: #F1E7ED;
+
+  --danger: #C6415A;
+  --danger-bg: #FBE9EC;
+  --warning: #C97F1E;
+  --warning-bg: #FBF0DD;
+  --success: #4E8360;
+  --success-bg: #E7F1E9;
+
+  /* Type */
+  --font-display: "Fraunces", "Georgia", serif;
+  --font-body: "Manrope", -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Radius */
+  --r-sm: 8px;
+  --r-md: 14px;
+  --r-lg: 22px;
+  --r-pill: 999px;
+
+  /* Shadow */
+  --shadow-sm: 0 1px 2px rgba(46, 19, 48, 0.06), 0 1px 1px rgba(46, 19, 48, 0.04);
+  --shadow-md: 0 6px 20px rgba(46, 19, 48, 0.08), 0 2px 6px rgba(46, 19, 48, 0.05);
+  --shadow-lg: 0 16px 40px rgba(46, 19, 48, 0.14), 0 4px 12px rgba(46, 19, 48, 0.06);
+
+  /* Layout */
+  --sidebar-w: 264px;
+  --topbar-h: 72px;
+  --container-max: 1180px;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--ink-900);
+  background: var(--bg-canvas);
+  -webkit-font-smoothing: antialiased;
+  font-size: 15.5px;
+  line-height: 1.55;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  color: var(--plum-900);
+  margin: 0 0 6px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+p { margin: 0 0 10px; color: var(--ink-700); }
+
+a { color: inherit; text-decoration: none; }
+
+button { font-family: var(--font-body); cursor: pointer; }
+
+::selection { background: var(--plum-100); }
+
+:focus-visible {
+  outline: 2.5px solid var(--plum-500);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+img { max-width: 100%; display: block; }
+
+.hidden { display: none !important; }
+
+.eyebrow {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--plum-600);
+}
+
+.container { max-width: var(--container-max); margin: 0 auto; padding: 0 28px; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+}
