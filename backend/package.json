@@ -1,0 +1,31 @@
+{
+  "name": "women-health-auth",
+  "version": "1.0.0",
+  "description": "Production-ready authentication module for a Women Health application",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [
+    "auth",
+    "women-health",
+    "jwt",
+    "otp",
+    "mongoose"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@google/genai": "^2.10.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.5.0",
+    "twilio": "^5.2.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
+}
