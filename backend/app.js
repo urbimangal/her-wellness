@@ -5,6 +5,7 @@ const authRoutes = require('./routes/authRoutes');
 const menstrualRoutes = require("./routes/menstrualRoutes");
 const aiRoutes = require("./routes/aiRoutes");
 const profileRoutes = require('./routes/profileRoutes');
+const pregnancyRoutes = require("./routes/pregnancyRoutes");
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
 const app = express();
@@ -24,6 +25,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/menstrual", menstrualRoutes);
+app.use("/api/pregnancy", pregnancyRoutes);
+
+
 // ---- 404 + centralized error handling ----
 app.use(notFound);
 app.use(errorHandler);
