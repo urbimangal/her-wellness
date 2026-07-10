@@ -3,91 +3,55 @@ const express = require("express");
 const router = express.Router();
 
 const pregnancyController = require("../controllers/pregnancyController");
-
-// const authMiddleware = require("../middleware/authMiddleware");
+const protect = require("../middleware/authMiddleware");
 
 // Start Pregnancy
-
 router.post(
-
-    "/start",
-
-    // authMiddleware,
-
-    pregnancyController.startPregnancy
-
+  "/start",
+  protect,
+  pregnancyController.startPregnancy
 );
 
 // Current Week
-
 router.get(
-
-    "/week",
-
-    // authMiddleware,
-
-    pregnancyController.getCurrentWeek
-
+  "/week",
+  protect,
+  pregnancyController.getCurrentWeek
 );
 
 // Baby Growth
-
 router.get(
-
-    "/growth",
-
-    // authMiddleware,
-
-    pregnancyController.getBabyGrowth
-
+  "/growth",
+  protect,
+  pregnancyController.getBabyGrowth
 );
 
 // Weekly Tips
-
 router.get(
-
-    "/tips",
-
-    // authMiddleware,
-
-    pregnancyController.getWeeklyTips
-
+  "/tips",
+  protect,
+  pregnancyController.getWeeklyTips
 );
 
 // Pregnancy Calendar
-
 router.get(
-
-    "/calendar",
-
-    // authMiddleware,
-
-    pregnancyController.getCalendar
-
+  "/calendar",
+  protect,
+  pregnancyController.getCalendar
 );
 
 // Update Pregnancy
-
 router.put(
-
-    "/update/:id",
-
-    // authMiddleware,
-
-    pregnancyController.updatePregnancy
-
+  "/:id",
+  protect,
+  pregnancyController.updatePregnancy
 );
 
 // Delete Pregnancy
-
 router.delete(
-
-    "/delete/:id",
-
-    // authMiddleware,
-
-    pregnancyController.deletePregnancy
-
+  "/:id",
+  protect,
+  pregnancyController.deletePregnancy
 );
 
 module.exports = router;

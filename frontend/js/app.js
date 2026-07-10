@@ -5,7 +5,7 @@
    ========================================================= */
 (function () {
   "use strict";
-
+  const API_BASE_URL = "http://localhost:5000/api";
   /* ---------------------------------------------------------
      0. In-memory app state (stands in for backend/session)
      --------------------------------------------------------- */
@@ -55,38 +55,179 @@
     if (!name) return "U";
     return name.trim().split(/\s+/).slice(0, 2).map((p) => p[0].toUpperCase()).join("");
   }
+  async function apiRequest(url, options = {}) {
 
+    const token = getToken();
+
+    try {
+
+        const response = await fetch(url, {
+
+            ...options,
+
+            headers: {
+
+                "Content-Type": "application/json",
+
+                ...(token && {
+                    Authorization: `Bearer ${token}`
+                }),
+
+                ...options.headers
+            }
+
+        });
+
+        let data = {};
+
+        try {
+            data = await response.json();
+        }
+        catch {}
+
+        return { response, data };
+
+    }
+
+    catch {
+
+        return {
+
+            response: {
+                ok: false,
+                status: 500
+            },
+
+            data: {
+                message: "Network Error"
+            }
+
+        };
+
+    }
+
+}
+// ==========================================
+// Common Helpers
+// ==========================================
+
+function getToken() {
+    return localStorage.getItem("token");
+}
+
+function saveLocal(key, data) {
+    localStorage.setItem(key, JSON.stringify(data));
+}
+
+function loadLocal(key) {
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : null;
+}
+
+function setText(id, value) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.textContent = value;
+    }
+}
+
+function setHTML(id, value) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.innerHTML = value;
+    }
+}
   /* ---------------------------------------------------------
-     2. Toast notifications
-     --------------------------------------------------------- */
-  const toastRegion = $("#toast-region");
-  const toastIcons = {
-    success: "#ic-check",
-    error: "#ic-x",
-    info: "#ic-info",
-  };
-  function toast(message, type = "info", duration = 3400) {
-    const el = document.createElement("div");
-    el.className = `toast ${type}`;
-    el.innerHTML = `<svg><use href="${toastIcons[type] || toastIcons.info}"/></svg><span>${message}</span>`;
-    toastRegion.appendChild(el);
-    setTimeout(() => {
-      el.classList.add("leaving");
-      setTimeout(() => el.remove(), 260);
-    }, duration);
-  }
-  window.HW_toast = toast; // exposed for quick debugging if needed
+   2. Toast notifications
+--------------------------------------------------------- */
 
+const toastRegion = $("#toast-region");
+
+const toastIcons = {
+  success: "#ic-check",
+  error: "#ic-x",
+  info: "#ic-info",
+};
+
+function toast(message, type = "info", duration = 3400) {
+  if (!toastRegion) return;
+
+  const el = document.createElement("div");
+  el.className = `toast ${type}`;
+
+  el.innerHTML = `
+    <svg>
+      <use href="${toastIcons[type] || toastIcons.info}"></use>
+    </svg>
+    <span>${message}</span>
+  `;
+
+  toastRegion.appendChild(el);
+
+  setTimeout(() => {
+    el.classList.add("leaving");
+
+    setTimeout(() => {
+      el.remove();
+    }, 260);
+
+  }, duration);
+}
+
+window.HW_toast = toast;
+  
   /* ---------------------------------------------------------
      3. Initial page loader
      --------------------------------------------------------- */
   window.addEventListener("load", () => {
     const loader = $("#page-loader");
+
+    if (!loader) return;
+
     setTimeout(() => {
-      loader.style.opacity = "0";
-      setTimeout(() => hide(loader), 350);
+        loader.style.opacity = "0";
+
+        setTimeout(() => {
+            hide(loader);
+        }, 350);
+
     }, 500);
-  });
+});
+window.addEventListener("DOMContentLoaded", autoLogin);
+
+async function autoLogin() {
+
+    const token = getToken();
+    if (!token) return;
+
+    try {
+
+        const { response, data } = await apiRequest(
+    `${API_BASE_URL}/profile`
+);
+
+        if (!response.ok) {
+            localStorage.removeItem("token");
+            localStorage.removeItem("userId");
+            return;
+        }
+
+
+        state.profile = data.data.user;
+
+        state.registration = {
+            name: data.data.user.fullName,
+            email: data.data.user.email,
+            phone: data.data.user.phone
+        };
+
+        enterDashboard();
+
+    } catch (err) {
+    toast("Unable to restore session", "error");
+    }
+
+}
 
   /* ===========================================================
      4. REGISTRATION SCREEN — live password validation
@@ -113,7 +254,10 @@
     Object.keys(pwRules).forEach((rule) => {
       const met = pwRules[rule](val);
       const row = $(`.pw-check[data-rule="${rule}"]`);
-      row.classList.toggle("met", met);
+
+      if (row) {
+          row.classList.toggle("met", met);
+      }
       if (!met) allMet = false;
     });
     return allMet;
@@ -240,45 +384,45 @@ regForm.addEventListener("submit", async (e) => {
 
     try {
 
-        const response = await fetch(
-            "http://localhost:5000/api/auth/register",
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    fullName: state.registration.name,
-                    email: state.registration.email,
-                    phone: state.registration.phone,
-                    password: state.registration.password,
-                    confirmPassword: regConfirm.value
-                })
-            }
-        );
-
-        const data = await response.json();
-
-        setButtonLoading(btnRegister, false);
-
+        const { response, data } = await apiRequest(
+        `${API_BASE_URL}/auth/register`,
+        {
+            method: "POST",
+            body: JSON.stringify({
+                fullName: state.registration.name,
+                email: state.registration.email,
+                phone: state.registration.phone,
+                password: state.registration.password,
+                confirmPassword: regConfirm.value
+            })
+        }
+      );
+        if (response.status === 409) {
+    setButtonLoading(btnRegister, false);
+    toast("User already exists", "error");
+    return;
+}
         if (!response.ok) {
-            toast(data.message, "error");
+            setButtonLoading(btnRegister, false);
+            toast(data.message || "Something went wrong", "error");
             return;
         }
 
+
         localStorage.setItem(
             "userId",
-            data.data.userId,
-            console.log(data)
+            data.data.userId
         );
         if (data.token) {
             localStorage.setItem("token", data.token);
         }
+        setButtonLoading(btnRegister, false);
         toast(
             "Registration Successful",
             "success"
         );
-
+        regForm.reset();
+        refreshRegisterState();
         goToProfileScreen();
 
     } catch (err) {
@@ -290,18 +434,117 @@ regForm.addEventListener("submit", async (e) => {
             "error"
         );
 
-        console.error(err);
     }
 });
 
 // Login
 $("#link-to-login").addEventListener("click", (e) => {
     e.preventDefault();
+    goToLoginScreen();
+});
 
-    toast(
-        "Login screen will be added next.",
-        "info"
-    );
+const loginForm = $("#form-login");
+
+const loginEmail = $("#login-email");
+
+const loginPassword = $("#login-password");
+
+const btnLogin = $("#btn-login");
+
+loginForm.addEventListener("submit", async (e) => {
+
+    e.preventDefault();
+
+    const email = loginEmail.value.trim();
+
+    const password = loginPassword.value;
+
+    if (!email || !password) {
+
+        toast("Please fill all fields.", "error");
+
+        return;
+
+    }
+
+    setButtonLoading(btnLogin, true, "Logging in...");
+
+    try {
+
+        const { response, data } = await apiRequest(
+          `${API_BASE_URL}/auth/login`,
+          {
+              method: "POST",
+              body: JSON.stringify({
+                  identifier: email,
+                  password
+              })
+          }
+        );
+        if (response.status === 401) {
+
+          setButtonLoading(btnLogin, false);
+
+          toast("Invalid Email or Password", "error");
+
+          return;
+
+        }
+        if (!response.ok) {
+
+            setButtonLoading(btnLogin, false);
+
+            toast(data.message || "Something went wrong", "error");
+
+            return;
+
+        }
+
+        localStorage.setItem("token", data.token);
+
+        localStorage.setItem("userId", data.data.userId);
+
+       const {
+        response: profileResponse,
+        data: profileData
+    } = await apiRequest(
+        `${API_BASE_URL}/profile`
+    ); 
+      if (!profileResponse.ok) {
+        setButtonLoading(btnLogin, false);
+        toast("Unable to load profile", "error");
+        return;
+      }
+    state.profile = profileData.data.user;
+    state.registration.name = profileData.data.user.fullName;
+    state.registration.email = profileData.data.user.email;
+    state.registration.phone = profileData.data.user.phone;
+
+
+
+
+        toast("Login Successful", "success");
+
+        setButtonLoading(btnLogin, false);
+        loginForm.reset();
+        enterDashboard();
+
+    }
+
+    catch (err) {
+
+        setButtonLoading(btnLogin, false);
+
+
+        toast("Server Error", "error");
+
+    }
+
+});
+
+$("#link-to-register").addEventListener("click", (e) => {
+    e.preventDefault();
+    goToRegisterScreen();
 });
   
 
@@ -310,10 +553,24 @@ $("#link-to-login").addEventListener("click", (e) => {
 =========================================================== */
 
 const screenRegister = $("#screen-register");
+const screenLogin = $("#screen-login");
 const screenProfile = $("#screen-profile");
+
+function goToLoginScreen() {
+    hide(screenRegister);
+    hide(screenProfile);
+    show(screenLogin);
+}
+
+function goToRegisterScreen() {
+    hide(screenLogin);
+    hide(screenProfile);
+    show(screenRegister);
+}
 
 function goToProfileScreen() {
     hide(screenRegister);
+    hide(screenLogin);
     show(screenProfile);
 }
 
@@ -330,8 +587,8 @@ function goToProfileScreen() {
       ["p-blood", "err-p-blood", (v) => v.trim().length > 0],
       ["p-height", "err-p-height", (v) => +v >= 100 && +v <= 220],
       ["p-weight", "err-p-weight", (v) => +v >= 25 && +v <= 200],
-      ["p-ec-name", "err-p-ec-name", (v) => v.trim().length >= 2],
-      ["p-ec-number", "err-p-ec-number", (v) => /^[6-9]\d{9}$/.test(v.trim())],
+      ["p-ec-number1", "err-p-ec-number1", (v) => /^[6-9]\d{9}$/.test(v.trim())],
+      ["p-ec-number2", "err-p-ec-number2", (v) => /^[6-9]\d{9}$/.test(v.trim())],
     ];
     checks.forEach(([inputId, errId, fn]) => {
       const input = $(`#${inputId}`);
@@ -342,8 +599,16 @@ function goToProfileScreen() {
     return valid;
   }
 
-  $("#p-ec-number").addEventListener("input", (e) => {
-    e.target.value = e.target.value.replace(/\D/g, "").slice(0, 10);
+  ["#p-ec-number1", "#p-ec-number2"].forEach((id) => {
+    const input = $(id);
+
+    if (!input) return;
+
+    input.addEventListener("input", (e) => {
+        e.target.value = e.target.value
+            .replace(/\D/g, "")
+            .slice(0, 10);
+    });
   });
 
   profileForm.addEventListener("submit", async (e) => {
@@ -357,18 +622,67 @@ function goToProfileScreen() {
       blood: $("#p-blood").value,
       height: $("#p-height").value,
       weight: $("#p-weight").value,
-      ecName: $("#p-ec-name").value,
-      ecNumber: $("#p-ec-number").value,
+      emergencyNumber1: $("#p-ec-number1").value,
+      emergencyNumber2: $("#p-ec-number2").value,
       conditions: $("#p-conditions").value,
       allergies: $("#p-allergies").value,
     };
 
     setButtonLoading(btnSaveProfile, true, "Saving...");
-    await fakeRequest(1100);
-    setButtonLoading(btnSaveProfile, false);
+    
 
-    toast(`Welcome to HerWellness, ${state.registration.name.split(" ")[0]}!`, "success");
-    enterDashboard();
+try {
+
+    const { response, data } = await apiRequest(
+    `${API_BASE_URL}/profile`,
+    {
+        method: "PUT",
+        body: JSON.stringify({
+            age: Number(state.profile.age),
+            bloodGroup: state.profile.blood,
+            height: Number(state.profile.height),
+            weight: Number(state.profile.weight),
+            emergencyContact1: state.profile.emergencyNumber1,
+            emergencyContact2: state.profile.emergencyNumber2,
+            medicalConditions: state.profile.conditions,
+            allergies: state.profile.allergies
+        })
+    }
+);
+    
+if (response.status === 401) {
+
+    localStorage.removeItem("token");
+    localStorage.removeItem("userId");
+
+    toast("Session Expired. Please Login Again.","error");
+
+    logout();
+
+    return;
+
+}
+if (!response.ok) {
+    setButtonLoading(btnSaveProfile, false);
+    toast(data.message || "Something went wrong", "error");
+    return;
+}
+
+
+state.profile = data.data.user;
+setButtonLoading(btnSaveProfile, false);
+toast("Profile Saved Successfully", "success");
+enterDashboard();
+
+}
+
+catch(err){
+
+    setButtonLoading(btnSaveProfile,false);
+
+    toast("Server Error","error");
+
+}
   });
 
   /* ===========================================================
@@ -377,14 +691,23 @@ function goToProfileScreen() {
   const appShell = $("#app-shell");
 
   function enterDashboard() {
+    hide(screenRegister);
+    hide(screenLogin);
     hide(screenProfile);
+
     show(appShell);
+
     populateUserChrome();
-    buildCalendar();
+
+    if (predictionData) {
+        buildPredictionCalendar(predictionData);
+    }
+
     buildMoodChart();
     buildFitnessChart();
+
     navigateTo("dashboard");
-  }
+}
 
   function populateUserChrome() {
     const name = state.registration.name || "Ananya Sharma";
@@ -397,12 +720,14 @@ function goToProfileScreen() {
       $("#profile-phone").textContent = "+91 " + state.registration.phone;
     }
     if (state.profile.age) $("#view-age").value = state.profile.age;
-    if (state.profile.blood) $("#view-blood").value = state.profile.blood;
+    if (state.profile.bloodGroup) $("#view-blood").value = state.profile.bloodGroup;
     if (state.profile.height) $("#view-height").value = state.profile.height;
     if (state.profile.weight) $("#view-weight").value = state.profile.weight;
-    if (state.profile.ecName) $("#view-ec-name").value = state.profile.ecName;
-    if (state.profile.ecNumber) $("#view-ec-number").value = state.profile.ecNumber;
-  }
+    if (state.profile.emergencyContact1) $("#view-ec-number1").value = state.profile.emergencyContact1;
+    if (state.profile.emergencyContact2) $("#view-ec-number2").value = state.profile.emergencyContact2;
+    if (state.profile.medicalConditions) $("#view-conditions").value = state.profile.medicalConditions;
+    if (state.profile.allergies) $("#view-allergies").value = state.profile.allergies;
+    }
 
   /* ---------------------------------------------------------
      8. Sidebar navigation / routing (in-app, hash-free)
@@ -462,10 +787,26 @@ function goToProfileScreen() {
     localStorage.removeItem("token");
     localStorage.removeItem("userId");
 
+    state.profile = {};
+    state.registration = {
+      name: "",
+      email: "",
+      phone: "",
+      password: ""
+    };
+    hide(screenLogin);
+    hide(screenProfile);
     hide(appShell);
+
     show(screenRegister);
 
     toast("You've been logged out.", "info");
+    regForm.reset();
+    loginForm.reset();
+    profileForm.reset();
+    setButtonLoading(btnRegister, false);
+    setButtonLoading(btnLogin, false);
+    setButtonLoading(btnSaveProfile, false);
 }
   $("#btn-logout").addEventListener("click", (e) => { e.preventDefault(); logout(); });
   $("#btn-logout-2").addEventListener("click", logout);
@@ -483,45 +824,753 @@ function goToProfileScreen() {
   /* ===========================================================
      10. MENSTRUAL TRACKER — Calendar generation (dummy data)
      =========================================================== */
-  function buildCalendar() {
-    const grid = $("#cal-grid");
-    if (!grid || grid.dataset.built) return;
-    grid.dataset.built = "1";
 
-    const dow = ["S", "M", "T", "W", "T", "F", "S"];
-    dow.forEach((d) => {
-      const cell = document.createElement("div");
-      cell.className = "cal-dow";
-      cell.textContent = d;
-      grid.appendChild(cell);
+const API_BASE = `${API_BASE_URL}/ml`;
+let predictionData = null;
+const cycleContainer = document.getElementById("cycle-history-container");
+const addCycleBtn = document.getElementById("btn-add-cycle");
+const predictBtn = document.getElementById("btn-predict-cycle");
+function loadCycleHistory() {
+
+    const history = loadLocal("cycleHistory");
+
+if(!history) return;
+
+    cycleContainer.innerHTML = "";
+
+    history.period_start_dates.forEach((date, index) => {
+
+        addCycleRow(
+            date,
+            history.period_lengths[index]
+        );
+
     });
 
-    // July 2026 starts on a Wednesday; 31 days. Period: Jun 22-26 (shown as muted lead days),
-    // fertile window Jul 12-17, today = Jul 8, predicted next period starts Jul 20.
-    const leadingBlank = 3; // Wed is index 3 (Sun=0)
-    const totalDays = 31;
-    const periodDays = []; // none in July start range shown, but let's mark none early
-    const fertileDays = [12, 13, 14, 15, 16, 17];
-    const predictedDays = [20, 21, 22, 23, 24];
-    const today = 8;
+    document.getElementById("pregnancy-status").value =
+        history.pregnancy_status;
 
-    for (let i = 0; i < leadingBlank; i++) {
-      const cell = document.createElement("div");
-      cell.className = "cal-day muted";
-      cell.textContent = "";
-      grid.appendChild(cell);
+}
+// Default Initialization
+document.addEventListener("DOMContentLoaded", () => {
+    initMenstrualTracker();
+    loadPrediction();
+});
+
+// ------------------------------------------
+// Initialize
+// ------------------------------------------
+
+function initMenstrualTracker() {
+
+    cycleContainer.innerHTML = "";
+
+loadCycleHistory();
+
+if (!cycleContainer.children.length) {
+
+    for (let i = 0; i < 4; i++) {
+
+        addCycleRow();
+
     }
-    for (let d = 1; d <= totalDays; d++) {
-      const cell = document.createElement("div");
-      cell.className = "cal-day";
-      cell.textContent = d;
-      if (periodDays.includes(d)) cell.classList.add("period");
-      if (fertileDays.includes(d)) cell.classList.add("fertile");
-      if (predictedDays.includes(d)) cell.classList.add("predicted");
-      if (d === today) cell.classList.add("today");
-      grid.appendChild(cell);
+
+}
+}
+function clearCycleHistory(){
+
+    localStorage.removeItem("cycleHistory");
+
+    localStorage.removeItem("lastPrediction");
+
+    predictionData = null;
+
+    cycleContainer.innerHTML = "";
+
+    for(let i=0;i<4;i++){
+
+        addCycleRow();
+
+    }
+
+    toast("History Cleared");
+
+}
+
+// ------------------------------------------
+// Add New Cycle Row
+// ------------------------------------------
+
+function addCycleRow(date = "", length = 5) {
+
+    const row = document.createElement("div");
+
+    row.className = "cycle-row";
+
+    row.innerHTML = `
+
+        <input
+            type="date"
+            class="input cycle-date"
+            value="${date}"
+        >
+
+        <input
+            type="number"
+            class="input cycle-length"
+            min="1"
+            max="10"
+            value="${length}"
+        >
+
+        <button
+            type="button"
+            class="btn btn-danger btn-remove-cycle"
+        >
+            Remove
+        </button>
+
+    `;
+
+    cycleContainer.appendChild(row);
+
+}
+
+// ------------------------------------------
+// Remove Row
+// ------------------------------------------
+
+cycleContainer.addEventListener("click", (e) => {
+
+    if (!e.target.classList.contains("btn-remove-cycle"))
+        return;
+
+    const rows =
+        document.querySelectorAll(".cycle-row");
+
+    if (rows.length <= 2) {
+
+        toast("Minimum 2 cycles required.");
+
+        return;
+
+    }
+
+    e.target.closest(".cycle-row").remove();
+
+});
+
+// ------------------------------------------
+// Add Row Button
+// ------------------------------------------
+if(addCycleBtn){
+
+    addCycleBtn.addEventListener("click", () => {
+    
+        addCycleRow();
+    
+    });
+}
+
+// ------------------------------------------
+// Validate Input
+// ------------------------------------------
+
+function validateCycleHistory() {
+
+    const dates =
+        document.querySelectorAll(".cycle-date");
+
+    const lengths =
+        document.querySelectorAll(".cycle-length");
+
+    if (dates.length < 2) {
+
+        toast("Enter at least 2 previous cycles.");
+
+        return false;
+
+    }
+
+    for (let i = 0; i < dates.length; i++) {
+
+        if (!dates[i].value) {
+
+            toast(
+                `Select period date for cycle ${i + 1}`
+            );
+
+            dates[i].focus();
+
+            return false;
+
+        }
+
+        const len = Number(lengths[i].value);
+
+        if (len < 1 || len > 10) {
+
+            toast(
+                `Invalid period length in cycle ${i + 1}`
+            );
+
+            lengths[i].focus();
+
+            return false;
+
+        }
+
+    }
+
+    return true;
+
+}
+
+// ------------------------------------------
+// Collect History
+// ------------------------------------------
+
+function collectCycleHistory() {
+
+    const dates =
+        document.querySelectorAll(".cycle-date");
+
+    const lengths =
+        document.querySelectorAll(".cycle-length");
+
+    const period_start_dates = [];
+
+    const period_lengths = [];
+
+    dates.forEach((item) => {
+
+        period_start_dates.push(item.value);
+
+    });
+
+    lengths.forEach((item) => {
+
+        period_lengths.push(
+            Number(item.value)
+        );
+
+    });
+
+    return {
+
+        period_start_dates,
+
+        period_lengths,
+
+        pregnancy_status:
+            document.getElementById("pregnancy-status")
+                .value
+
+    };
+  }
+    // ==========================================
+// PREDICT CYCLE
+// ==========================================
+if(predictBtn){
+
+    predictBtn.addEventListener("click", predictCycle);
+}
+
+async function predictCycle() {
+
+    if (!validateCycleHistory()) return;
+
+    const payload = collectCycleHistory();
+
+    console.log("Sending Payload :", payload);
+
+    try {
+
+        setPredictionLoading(true);
+
+        const token = getToken();
+
+        const response = await fetch(
+            `${API_BASE}/predict`,
+            {
+
+                method: "POST",
+
+                headers: {
+
+                    "Content-Type": "application/json",
+
+                    Authorization: `Bearer ${token}`
+
+                },
+
+                body: JSON.stringify(payload)
+
+            }
+        );
+
+        const result = await response.json();
+
+        console.log(result);
+
+        if (!response.ok) {
+
+            throw new Error(
+                result.message ||
+                "Prediction Failed"
+            );
+
+        }
+        
+        predictionData = result.data;
+
+        updatePredictionUI(result.data);
+
+        buildPredictionCalendar(result.data);
+
+        savePrediction(result.data);
+        saveCycleHistory();
+        toast("Prediction Generated Successfully");
+
+    }
+
+    catch (err) {
+
+        console.error(err);
+
+        toast(err.message);
+
+    }
+
+    finally {
+
+        setPredictionLoading(false);
+
     }
   }
+  function saveCycleHistory() {
+
+    const history = collectCycleHistory();
+
+    saveLocal("cycleHistory", history);
+
+}
+    // ==========================================
+// BUTTON LOADER
+// ==========================================
+
+function setPredictionLoading(status) {
+
+    if (status) {
+
+        predictBtn.disabled = true;
+
+        predictBtn.innerHTML =
+            "Predicting...";
+
+    }
+
+    else {
+
+        predictBtn.disabled = false;
+
+        predictBtn.innerHTML =
+            "Predict Cycle";
+
+    }
+  }
+    // ==========================================
+// SAVE LAST PREDICTION
+// ==========================================
+
+function savePrediction(data) {
+
+    saveLocal("lastPrediction", data);
+
+}
+// ==========================================
+// LOAD SAVED DATA
+// ==========================================
+
+function loadPrediction() {
+
+    const data = loadLocal("lastPrediction");
+
+if(!data) return;
+
+    predictionData = data;
+
+    updatePredictionUI(data);
+
+    buildPredictionCalendar(data);
+
+}
+
+// =====================================
+// UPDATE PREDICTION CARDS
+// =====================================
+function formatDate(date){
+
+    return new Date(date).toLocaleDateString(
+        "en-IN",
+        {
+            day:"numeric",
+            month:"short",
+            year:"numeric"
+        }
+    );
+
+}
+function updatePredictionUI(data) {
+
+    setHTML(
+"cycle-day",
+`Average Cycle : <strong>${data.average_cycle_length_days} Days</strong>`
+);
+
+
+
+    setText(
+"last-period-result",
+formatDate(data.predicted_next_period_start)
+);
+
+
+
+   setText(
+"cycle-length-result",
+`${data.average_cycle_length_days} Days`
+);
+
+
+    setText(
+"period-length-result",
+`${data.average_period_length_days} Days`
+);
+
+
+    setText(
+    "next-period-result",
+    formatDate(data.predicted_next_period_start)
+);
+
+
+
+    setText(
+    "fertile-window-result",
+    `${formatDate(data.fertile_window_start)} - ${formatDate(data.fertile_window_end)}`
+);
+
+
+
+   setText(
+    "ovulation-result",
+    "Ovulation : " + formatDate(data.predicted_ovulation_date)
+);
+
+
+setText(
+    "prediction-confidence",
+    data.confidence.toUpperCase()
+);
+setText(
+    "prediction-note",
+    data.note || "Your cycle appears healthy."
+);
+
+    }
+    
+    
+// =====================================
+// BUILD CALENDAR
+// =====================================
+let currentCalendarMonth = null;
+let currentCalendarYear = null;
+let currentPrediction = null;
+function buildPredictionCalendar(data) {
+    
+    const grid = document.getElementById("cal-grid");
+
+    grid.innerHTML = "";
+
+
+
+    const days =
+
+        ["S", "M", "T", "W", "T", "F", "S"];
+
+
+
+    days.forEach(day => {
+
+        const cell = document.createElement("div");
+
+        cell.className = "cal-dow";
+
+        cell.innerHTML = day;
+
+        grid.appendChild(cell);
+
+    });
+
+    if (!data) return;
+
+    currentPrediction = data;
+
+const predictionDate = new Date(data.predicted_next_period_start);
+
+if (currentCalendarMonth === null) {
+    currentCalendarMonth = predictionDate.getMonth();
+    currentCalendarYear = predictionDate.getFullYear();
+}
+
+const month = currentCalendarMonth;
+const year = currentCalendarYear;
+
+
+
+    const displayDate = new Date(year, month);
+
+document.getElementById("calendar-month").textContent =
+displayDate.toLocaleString("default", {
+    month: "long",
+    year: "numeric"
+});
+
+
+
+
+    const firstDay =
+
+        new Date(
+
+            year,
+
+            month,
+
+            1
+
+        ).getDay();
+
+
+
+    const totalDays =
+
+        new Date(
+
+            year,
+
+            month + 1,
+
+            0
+
+        ).getDate();
+
+
+
+    for (let i = 0; i < firstDay; i++) {
+
+        const blank = document.createElement("div");
+
+        blank.className = "cal-day muted";
+
+        grid.appendChild(blank);
+
+    }
+
+
+
+    const today = new Date();
+
+
+
+    const fertileStart =
+
+        new Date(
+
+            data.fertile_window_start
+
+        );
+
+
+
+    const fertileEnd =
+
+        new Date(
+
+            data.fertile_window_end
+
+        );
+
+      const ovulation =
+new Date(data.predicted_ovulation_date);
+
+    const periodStart =
+
+        new Date(
+
+            data.predicted_next_period_start
+
+        );
+
+
+
+    const periodEnd =
+
+        new Date(periodStart);
+
+
+
+    periodEnd.setDate(
+
+        periodEnd.getDate() +
+
+        data.average_period_length_days - 1
+
+    );
+
+
+
+    for (
+
+        let day = 1;
+
+        day <= totalDays;
+
+        day++
+
+    ) {
+
+        const cell =
+
+            document.createElement("div");
+
+
+
+        cell.className = "cal-day";
+
+        cell.innerHTML = day;
+
+
+
+        const current =
+
+            new Date(
+
+                year,
+
+                month,
+
+                day
+
+            );
+
+
+
+        if (
+
+            current >= fertileStart &&
+
+            current <= fertileEnd
+
+        ) {
+
+            cell.classList.add(
+
+                "fertile"
+
+            );
+
+        }
+        if(
+current.getDate()===ovulation.getDate() &&
+current.getMonth()===ovulation.getMonth() &&
+current.getFullYear()===ovulation.getFullYear()
+){
+
+    cell.classList.add("ovulation");
+
+    cell.innerHTML=`
+        ${day}
+        <span class="ovu-star">★</span>
+    `;
+
+}
+
+
+
+        if (
+
+            current >= periodStart &&
+
+            current <= periodEnd
+
+        ) {
+
+            cell.classList.add(
+
+                "period"
+
+            );
+
+        }
+
+
+
+        if (
+
+            current.getDate() === today.getDate() &&
+
+            current.getMonth() === today.getMonth() &&
+
+            current.getFullYear() === today.getFullYear()
+
+        ) {
+
+            cell.classList.add(
+
+                "today"
+
+            );
+
+        }
+
+
+
+        grid.appendChild(cell);
+
+    }
+
+}
+document
+.getElementById("prev-month")
+.addEventListener("click", () => {
+
+    currentCalendarMonth--;
+
+    if (currentCalendarMonth < 0) {
+        currentCalendarMonth = 11;
+        currentCalendarYear--;
+    }
+
+    buildPredictionCalendar(currentPrediction);
+});
+
+document
+.getElementById("next-month")
+.addEventListener("click", () => {
+
+    currentCalendarMonth++;
+
+    if (currentCalendarMonth > 11) {
+        currentCalendarMonth = 0;
+        currentCalendarYear++;
+    }
+
+    buildPredictionCalendar(currentPrediction);
+});
+
+
 
   /* ===========================================================
      11. MENTAL WELLNESS — Mood selector + stress slider
@@ -578,16 +1627,46 @@ function goToProfileScreen() {
   }
 
   async function sendChatMessage(text) {
+
     if (!text.trim()) return;
+
     addBubble(text, "user");
+
     chatInput.value = "";
+
     const typing = addTypingIndicator();
-    await fakeRequest(1000);
-    typing.remove();
-    const key = text.trim().toLowerCase();
-    const reply = aiResponses[key] || "Thanks for sharing that. While I can offer general wellness guidance, for anything specific to your symptoms it's best to confirm with your doctor. Would you like a few general tips in the meantime?";
-    addBubble(reply, "ai");
-  }
+
+    try {
+
+        const { response, data } = await apiRequest(
+            `${API_BASE_URL}/ai/chat`,
+            {
+                method: "POST",
+                body: JSON.stringify({
+                    message: text
+                })
+            }
+        );
+
+        typing.remove();
+
+        if (!response.ok) {
+            addBubble("Unable to generate response.", "ai");
+            return;
+        }
+
+        addBubble(data.data.reply, "ai");
+
+    }
+    catch {
+
+        typing.remove();
+
+        addBubble("Server unavailable.", "ai");
+
+    }
+
+}
 
   chatForm.addEventListener("submit", (e) => {
     e.preventDefault();

@@ -1,7 +1,6 @@
 const asyncHandler = require("../utils/asyncHandler");
 
 const aiChatService = require("../services/aiChatService");
-const recommendationService = require("../services/recommendationService");
 const symptomService = require("../services/symptomService");
 const riskPredictionService = require("../services/riskPredictionService");
 

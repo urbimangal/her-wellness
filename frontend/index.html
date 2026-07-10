@@ -162,6 +162,213 @@
     </div>
   </div>
 </div>
+
+<!-- =========================================================
+     AUTH — SCREEN 2: LOGIN
+========================================================= -->
+
+<div class="auth-shell hidden" id="screen-login">
+
+    <!-- Left Side -->
+    <div class="auth-brand">
+
+        <div class="brand-mark">
+            <svg class="brand-logo">
+                <use href="#ic-logo"></use>
+            </svg>
+            <span>HerWellness</span>
+        </div>
+
+        <div class="auth-brand-body">
+
+            <span class="eyebrow">
+                Welcome Back
+            </span>
+
+            <h1>
+                Your health journey continues here.
+            </h1>
+
+            <p>
+                Log in to access your menstrual tracker,
+                pregnancy care, AI health assistant,
+                emergency SOS and personalized wellness dashboard.
+            </p>
+
+            <div class="brand-stats">
+
+                <div>
+                    <strong>50K+</strong>
+                    <span>Happy Users</span>
+                </div>
+
+                <div>
+                    <strong>4.8★</strong>
+                    <span>User Rating</span>
+                </div>
+
+                <div>
+                    <strong>24/7</strong>
+                    <span>Health Support</span>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="auth-brand-quote">
+            "Take care of your body. It's the only place you have to live."
+        </div>
+
+    </div>
+
+
+
+    <!-- Right Side -->
+
+    <div class="auth-form-panel">
+
+        <div class="auth-form-card">
+
+            <span class="eyebrow">
+                Welcome Back
+            </span>
+
+            <h2>
+                Login to your account
+            </h2>
+
+            <p class="subtitle">
+                Continue where you left off.
+            </p>
+
+
+
+            <form id="form-login" novalidate>
+
+
+                <!-- Email -->
+
+                <div class="field">
+    <label for="login-email">Email Address or Phone Number</label>
+
+    <input
+        id="login-email"
+        class="input"
+        type="text"
+        placeholder="Enter email or phone number"
+        autocomplete="username"
+        required
+    />
+
+    <div
+        class="field-error"
+        id="err-login-email"
+    >
+        Enter a valid email address or phone number.
+    </div>
+</div>
+
+
+
+                <!-- Password -->
+
+                <div class="field">
+
+                    <label for="login-password">
+                        Password
+                    </label>
+
+                    <div class="input-wrap">
+
+                        <input
+                            class="input"
+                            type="password"
+                            id="login-password"
+                            placeholder="Enter your password"
+                            required
+                        >
+
+                        <button
+                            type="button"
+                            class="toggle-visibility"
+                            data-toggle-for="login-password"
+                        >
+                            SHOW
+                        </button>
+
+                    </div>
+
+                    <div
+                        class="field-error"
+                        id="err-login-password"
+                    >
+                        Password is required.
+                    </div>
+
+                </div>
+
+
+
+                <!-- Forgot Password -->
+
+                <div
+                    style="
+                    display:flex;
+                    justify-content:flex-end;
+                    margin-top:-8px;
+                    margin-bottom:18px;
+                    "
+                >
+
+                    <a
+                        href="#"
+                        id="forgot-password"
+                    >
+                        Forgot Password?
+                    </a>
+
+                </div>
+
+
+
+                <!-- Login Button -->
+
+                <button
+                    type="submit"
+                    class="btn btn-primary btn-block"
+                    id="btn-login"
+                >
+
+                    Login
+
+                </button>
+
+            </form>
+
+
+
+            <p class="auth-switch">
+
+                Don't have an account?
+
+                <a
+                    href="#"
+                    id="link-to-register"
+                >
+
+                    Create Account
+
+                </a>
+
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
 <!-- =========================================================
      AUTH — SCREEN 3: COMPLETE PROFILE
      ========================================================= -->
@@ -221,16 +428,44 @@
         </div>
 
         <div class="field">
-          <label for="p-ec-name">Emergency contact name</label>
-          <input class="input" type="text" id="p-ec-name" placeholder="e.g. Riya Sharma" required>
-          <div class="field-error" id="err-p-ec-name">Please enter an emergency contact name.</div>
-        </div>
+    <label for="p-ec-number1">
+        Emergency Contact Number 1
+        <span class="text-muted">(Mother/Guardian)</span>
+    </label>
 
-        <div class="field">
-          <label for="p-ec-number">Emergency contact number</label>
-          <input class="input" type="tel" id="p-ec-number" placeholder="10-digit mobile number" maxlength="10" required>
-          <div class="field-error" id="err-p-ec-number">Enter a valid 10-digit number.</div>
-        </div>
+    <input
+        class="input"
+        type="tel"
+        id="p-ec-number1"
+        placeholder="10-digit mobile number"
+        maxlength="10"
+        required
+    >
+
+    <div class="field-error" id="err-p-ec-number1">
+        Enter a valid 10-digit number.
+    </div>
+</div>
+
+<div class="field">
+    <label for="p-ec-number2">
+        Emergency Contact Number 2
+        <span class="text-muted">(Father/Guardian)</span>
+    </label>
+
+    <input
+        class="input"
+        type="tel"
+        id="p-ec-number2"
+        placeholder="10-digit mobile number"
+        maxlength="10"
+        required
+    >
+
+    <div class="field-error" id="err-p-ec-number2">
+        Enter a valid 10-digit number.
+    </div>
+</div>
 
         <div class="field">
           <label for="p-conditions">Medical conditions <span class="text-muted">(optional)</span></label>
@@ -329,7 +564,8 @@
             <span class="pill pill-coral">Fertile window</span>
           </div>
 
-          <div class="card">
+          <div class
+          ="card">
             <div class="card-title-row"><h3>Water Intake</h3><span class="icon-badge bg-sage"><svg><use href="#ic-drop"/></svg></span></div>
             <p class="mb-0"><strong style="color:var(--plum-900); font-size:20px; font-family:var(--font-display);">1.6L</strong> / 2.5L</p>
             <div class="bar-track" style="margin:10px 0;"><div class="bar-fill" style="width:64%; background:var(--sage-600);"></div></div>
@@ -380,51 +616,472 @@
         </div>
       </section>
 
-      <!-- ============ 3. MENSTRUAL TRACKER ============ -->
-      <section class="page hidden" id="page-menstrual">
-        <div class="grid-2col">
-          <div class="card">
-            <div class="cal-head">
-              <div><h3 class="mb-0">July 2026</h3><span class="text-muted">Cycle day 18 of 28</span></div>
-              <div class="nav-arrows">
-                <button class="icon-btn"><svg><use href="#ic-arrow-left"/></svg></button>
-                <button class="icon-btn"><svg><use href="#ic-chevron-right"/></svg></button>
-              </div>
-            </div>
-            <div class="cal-grid" id="cal-grid"></div>
-            <div class="cal-legend">
-              <div class="item"><span class="sw" style="background:var(--coral-600);"></span>Period</div>
-              <div class="item"><span class="sw" style="background:var(--sage-100); border:1px solid var(--sage-500);"></span>Fertile window</div>
-              <div class="item"><span class="sw" style="border:1.5px dashed var(--coral-500);"></span>Predicted</div>
-            </div>
-          </div>
+      <!-- ================= MENSTRUAL TRACKER ================= -->
 
-          <div style="display:flex; flex-direction:column; gap:18px;">
-            <div class="card">
-              <h3>Cycle overview</h3>
-              <div style="display:flex; justify-content:space-between; margin:14px 0;">
-                <div><span class="text-muted">Last period</span><p style="font-weight:700; color:var(--plum-900); margin:2px 0 0;">Jun 22, 2026</p></div>
-                <div><span class="text-muted">Cycle length</span><p style="font-weight:700; color:var(--plum-900); margin:2px 0 0;">28 days</p></div>
-              </div>
-              <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-                <div><span class="text-muted">Period length</span><p style="font-weight:700; color:var(--plum-900); margin:2px 0 0;">5 days</p></div>
-                <div><span class="text-muted">Next period</span><p style="font-weight:700; color:var(--coral-600); margin:2px 0 0;">Jul 20, 2026</p></div>
-              </div>
+<section class="page hidden" id="page-menstrual">
+
+<div class="grid-2col">
+
+    <!-- LEFT SIDE -->
+
+    <div class="card">
+
+        <div class="cal-head">
+
+            <div>
+
+                <h3>Menstrual Calendar</h3>
+
+                <span
+                    class="text-muted"
+                    id="cycle-day">
+
+                    Log your cycle history to generate prediction.
+
+                </span>
+
             </div>
-            <div class="card">
-              <h3>Fertile window</h3>
-              <p class="mb-0">Jul 12 – Jul 17, with peak fertility on <strong>Jul 15</strong>.</p>
-              <span class="pill pill-sage" style="margin-top:10px;">Ovulation in 3 days</span>
+
+            <div class="nav-arrows">
+
+                <button
+                    class="icon-btn"
+                    id="prev-month">
+
+                    <svg>
+                        <use href="#ic-arrow-left"></use>
+                    </svg>
+
+                </button>
+
+                <button
+                    class="icon-btn"
+                    id="next-month">
+
+                    <svg>
+                        <use href="#ic-chevron-right"></use>
+                    </svg>
+
+                </button>
+
             </div>
-            <div class="card">
-              <h3>Notes</h3>
-              <textarea class="input" placeholder="How are you feeling today? Cramps, mood, flow...">Mild cramps this morning, energy improving by afternoon.</textarea>
-              <button class="btn btn-primary btn-sm" style="margin-top:10px;">Save note</button>
-            </div>
-          </div>
+
         </div>
-      </section>
 
+        <h3
+            id="calendar-month"
+            style="margin-bottom:18px;">
+        </h3>
+
+        <div
+            class="cal-grid"
+            id="cal-grid">
+        </div>
+
+        <div class="cal-legend">
+
+            <div class="item">
+                <span class="sw period"></span>
+                Period
+            </div>
+
+            <div class="item">
+                <span class="sw fertile"></span>
+                Fertile Window
+            </div>
+
+            <div class="item">
+                <span class="sw ovulation"></span>
+                Ovulation
+            </div>
+
+            <div class="item">
+                <span class="sw today"></span>
+                Today
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- RIGHT SIDE -->
+
+    <!-- RIGHT SIDE -->
+
+<div style="display:flex; flex-direction:column; gap:20px;">
+
+    <!-- ================= Cycle Overview ================= -->
+
+    <div class="card">
+
+        <div class="card-title-row">
+
+            <h3>Cycle Overview</h3>
+
+            <span class="pill pill-coral" id="cycle-status">
+                Waiting
+            </span>
+
+        </div>
+
+        <div class="grid-2">
+
+            <div>
+
+                <span class="text-muted">
+                    Average Cycle
+                </span>
+
+                <p id="cycle-length-result">
+                    --
+                </p>
+
+            </div>
+
+            <div>
+
+                <span class="text-muted">
+                    Period Length
+                </span>
+
+                <p id="period-length-result">
+                    --
+                </p>
+
+            </div>
+
+            <div>
+
+                <span class="text-muted">
+                    Next Period
+                </span>
+
+                <p
+                    id="next-period-result"
+                    style="color:var(--coral-600);">
+
+                    --
+
+                </p>
+
+            </div>
+
+            <div>
+
+                <span class="text-muted">
+                    Ovulation
+                </span>
+
+                <p
+                    id="ovulation-result"
+                    style="color:var(--sage-700);">
+
+                    --
+
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================= Fertility ================= -->
+
+    <div class="card">
+
+        <div class="card-title-row">
+
+            <h3>Fertility Prediction</h3>
+
+            <span
+                class="pill pill-sage"
+                id="prediction-confidence">
+
+                --
+
+            </span>
+
+        </div>
+
+        <p
+            id="fertile-window-result"
+            style="font-weight:700;
+            color:var(--plum-900);
+            margin-bottom:8px;">
+
+            --
+
+        </p>
+
+        <p
+            id="prediction-note"
+            class="text-muted">
+
+            Prediction will appear here after analysis.
+
+        </p>
+
+    </div>
+
+
+    <!-- ================= Prediction Form ================= -->
+
+    <div class="card">
+
+        <h3>
+            Predict Your Next Cycle
+        </h3>
+
+        <p class="text-muted">
+
+            Add your previous cycles for more accurate prediction.
+
+        </p>
+
+        <div
+            id="cycle-history-container">
+
+        </div>
+
+        <button
+            type="button"
+            id="btn-add-cycle"
+            class="btn btn-secondary btn-block">
+
+            + Add Previous Cycle
+
+        </button>
+
+        <div
+            class="field"
+            style="margin-top:20px;">
+
+            <label>
+
+                Pregnancy Status
+
+            </label>
+
+            <select
+                class="input"
+                id="pregnancy-status">
+
+                <option value="not_pregnant">
+
+                    Not Pregnant
+
+                </option>
+
+                <option value="pregnant">
+
+                    Pregnant
+
+                </option>
+
+            </select>
+
+        </div>
+
+        <button
+            id="btn-predict-cycle"
+            class="btn btn-primary btn-block">
+
+            Predict Cycle
+
+        </button>
+
+    </div>
+
+
+    <!-- ================= Notes ================= -->
+
+    <div class="card">
+
+        <h3>
+            Personal Notes
+        </h3>
+
+        <textarea
+            id="cycle-note"
+            class="input"
+            placeholder="Symptoms, cramps, mood, flow..."></textarea>
+
+        <button
+            class="btn btn-primary btn-sm"
+            style="margin-top:12px;">
+
+            Save Note
+
+        </button>
+
+    </div>
+
+</div>
+        <!-- ================= Cycle History ================= -->
+
+<div class="card">
+
+    <h3>Previous Cycle History</h3>
+
+    <p class="text-muted">
+        Add at least 2 previous cycles for better prediction.
+    </p>
+
+    <div
+        id="cycle-history-container">
+
+    </div>
+
+    <button
+        type="button"
+        class="btn btn-secondary btn-block"
+        id="btn-add-cycle">
+
+        + Add Previous Cycle
+
+    </button>
+
+    <div
+        class="field"
+        style="margin-top:18px;">
+
+        <label for="pregnancy-status">
+            Pregnancy Status
+        </label>
+
+        <select
+            class="input"
+            id="pregnancy-status">
+
+            <option value="not_pregnant">
+                Not Pregnant
+            </option>
+
+            <option value="pregnant">
+                Pregnant
+            </option>
+
+        </select>
+
+    </div>
+
+    <button
+        class="btn btn-primary btn-block"
+        id="btn-predict-cycle">
+
+        Predict Cycle
+
+    </button>
+
+</div>
+<!-- ================= Prediction Result ================= -->
+
+<div class="card">
+
+    <h3>Prediction Result</h3>
+
+    <div class="grid-2">
+
+        <div>
+
+            <span class="text-muted">
+                Average Cycle
+            </span>
+
+            <p id="cycle-length-result">
+                --
+            </p>
+
+        </div>
+
+        <div>
+
+            <span class="text-muted">
+                Average Period
+            </span>
+
+            <p id="period-length-result">
+                --
+            </p>
+
+        </div>
+
+        <div>
+
+            <span class="text-muted">
+                Next Period
+            </span>
+
+            <p id="next-period-result">
+                --
+            </p>
+
+        </div>
+
+        <div>
+
+            <span class="text-muted">
+                Ovulation
+            </span>
+
+            <p id="ovulation-result">
+                --
+            </p>
+
+        </div>
+
+        <div>
+
+            <span class="text-muted">
+                Fertile Window
+            </span>
+
+            <p id="fertile-window-result">
+                --
+            </p>
+
+        </div>
+
+        <div>
+
+            <span class="text-muted">
+                Confidence
+            </span>
+
+            <p id="prediction-confidence">
+                --
+            </p>
+
+        </div>
+
+    </div>
+
+    <hr>
+
+    <div>
+
+        <span class="text-muted">
+            Cycle Status
+        </span>
+
+        <p id="cycle-status">
+            --
+        </p>
+
+    </div>
+
+    <p
+        id="prediction-note"
+        class="text-muted"
+        style="margin-top:16px;">
+
+        Prediction will appear here after analysis.
+
+    </p>
+
+</div>
       <!-- ============ 4. PREGNANCY CARE ============ -->
       <section class="page hidden" id="page-pregnancy">
         <div class="week-hero">
@@ -778,8 +1435,8 @@
               <div class="field"><label>Blood group</label><input class="input" value="O+" id="view-blood" disabled></div>
               <div class="field"><label>Height (cm)</label><input class="input" value="162" id="view-height" disabled></div>
               <div class="field"><label>Weight (kg)</label><input class="input" value="58" id="view-weight" disabled></div>
-              <div class="field"><label>Emergency contact</label><input class="input" value="Riya Sharma" id="view-ec-name" disabled></div>
-              <div class="field"><label>Emergency number</label><input class="input" value="98765 11111" id="view-ec-number" disabled></div>
+              <div class="field"><label>Emergency Contact Number 1</label><input class="input" value="98765 11111" id="view-ec-number1" disabled></div>
+              <div class="field"><label>Emergency Contact Number 2</label><input class="input" value="98765 11111" id="view-ec-number2" disabled></div>
             </div>
           </form>
         </div>

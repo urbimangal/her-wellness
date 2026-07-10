@@ -1,74 +1,95 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
   {
     fullName: {
       type: String,
-      required: [true, 'Full name is required'],
+      required: [true, "Full name is required"],
       trim: true,
-      minlength: [2, 'Full name must be at least 2 characters'],
-      maxlength: [100, 'Full name must be at most 100 characters'],
+      minlength: 2,
+      maxlength: 100,
     },
+
+    email: {
+      type: String,
+      required: [true, "Email is required"],
+      unique: true,
+      lowercase: true,
+      trim: true,
+      match: [
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+        "Please enter a valid email",
+      ],
+    },
+
     phone: {
       type: String,
-      required: [true, 'Phone number is required'],
+      required: [true, "Phone number is required"],
       unique: true,
       trim: true,
-      index: true,
+      match: [
+        /^[6-9]\d{9}$/,
+        "Please enter a valid 10-digit phone number",
+      ],
     },
+
     password: {
       type: String,
-      required: [true, 'Password is required'],
-      select: false, // never return password by default
+      required: [true, "Password is required"],
+      select: false,
     },
+
     isVerified: {
       type: Boolean,
       default: false,
     },
+
     profileCompleted: {
       type: Boolean,
       default: false,
     },
 
-    // ---- Profile fields (filled in later via PUT /api/profile) ----
     age: {
       type: Number,
-      min: [1, 'Age must be a positive number'],
-      max: [120, 'Age must be realistic'],
+      min: 10,
+      max: 90,
     },
+
     height: {
-      // in centimeters
       type: Number,
-      min: [0, 'Height must be a positive number'],
+      min: 100,
+      max: 250,
     },
+
     weight: {
-      // in kilograms
       type: Number,
-      min: [0, 'Weight must be a positive number'],
+      min: 20,
+      max: 250,
     },
+
     bloodGroup: {
       type: String,
-      enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
+      enum: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
     },
-    emergencyContactMother: {
-      name: { type: String, trim: true },
-      phone: { type: String, trim: true },
+
+    emergencyContact1: {
+      type: String,
+      match: [/^[6-9]\d{9}$/, "Invalid phone number"],
     },
-    emergencyContactFather: {
-      name: { type: String, trim: true },
-      phone: { type: String, trim: true },
+
+    emergencyContact2: {
+      type: String,
+      match: [/^[6-9]\d{9}$/, "Invalid phone number"],
     },
-    emergencyContactGuardian: {
-      name: { type: String, trim: true },
-      phone: { type: String, trim: true },
-    },
+
     medicalConditions: {
-      type: [String],
-      default: [],
+      type: String,
+      default: "",
     },
+
     allergies: {
-      type: [String],
-      default: [],
+      type: String,
+      default: "",
     },
   },
   {
@@ -76,13 +97,11 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// Never leak password even if select('+password') was used upstream and
-// the document is serialized to JSON somewhere unexpected.
-userSchema.methods.toSafeObject = function toSafeObject() {
+userSchema.methods.toSafeObject = function () {
   const obj = this.toObject();
   delete obj.password;
   delete obj.__v;
   return obj;
 };
 
-module.exports = mongoose.model('User', userSchema);
+module.exports = mongoose.model("User", userSchema);

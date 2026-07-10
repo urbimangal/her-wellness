@@ -2,12 +2,11 @@ const express = require('express');
 const cors = require('cors');
 
 const authRoutes = require('./routes/authRoutes');
-const menstrualRoutes = require("./routes/menstrualRoutes");
 const aiRoutes = require("./routes/aiRoutes");
 const profileRoutes = require('./routes/profileRoutes');
 const pregnancyRoutes = require("./routes/pregnancyRoutes");
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
-
+const mlRoutes = require("./routes/mlRoutes");
 const app = express();
 
 // ---- Global middleware ----
@@ -24,9 +23,8 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use("/api/ai", aiRoutes);
-app.use("/api/menstrual", menstrualRoutes);
 app.use("/api/pregnancy", pregnancyRoutes);
-
+app.use("/api/ml", mlRoutes);
 
 // ---- 404 + centralized error handling ----
 app.use(notFound);

@@ -3,30 +3,382 @@
    ========================================================= */
 
 /* --- Calendar (Menstrual Tracker) --- */
-.cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-.cal-head .nav-arrows { display: flex; gap: 6px; }
-.cal-head button.icon-btn { width: 32px; height: 32px; }
-.cal-head button.icon-btn svg { width: 14px; height: 14px; }
-.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
-.cal-dow { text-align: center; font-size: 11px; font-weight: 700; color: var(--ink-500); padding-bottom: 6px; }
-.cal-day {
-  aspect-ratio: 1;
-  display: flex; align-items: center; justify-content: center;
-  border-radius: 10px;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--ink-700);
-  position: relative;
-}
-.cal-day.muted { color: var(--ink-300); }
-.cal-day.period { background: var(--coral-600); color: #fff; }
-.cal-day.fertile { background: var(--sage-100); color: var(--sage-600); }
-.cal-day.predicted { border: 1.5px dashed var(--coral-500); color: var(--coral-600); }
-.cal-day.today::after { content: ""; position: absolute; bottom: 4px; width: 4px; height: 4px; border-radius: 50%; background: var(--plum-700); }
-.cal-legend { display: flex; gap: 16px; margin-top: 16px; flex-wrap: wrap; }
-.cal-legend .item { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--ink-500); }
-.cal-legend .sw { width: 10px; height: 10px; border-radius: 3px; }
+/* ==============================
+   MENSTRUAL TRACKER
+============================== */
 
+.cal-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:20px;
+    padding-bottom:14px;
+    border-bottom:1px solid var(--line-soft);
+}
+
+.cal-head h3{
+    margin:0;
+    color:var(--plum-900);
+}
+
+.cal-head .text-muted{
+    display:block;
+    margin-top:4px;
+    font-size:13px;
+}
+
+.cal-head .nav-arrows{
+    display:flex;
+    gap:8px;
+}
+
+.cal-head .icon-btn{
+    width:38px;
+    height:38px;
+    border-radius:10px;
+    border:1px solid var(--line-soft);
+    background:#fff;
+    transition:.25s;
+}
+
+.cal-head .icon-btn:hover{
+    background:var(--plum-50);
+    border-color:var(--plum-300);
+}
+
+.cal-head .icon-btn svg{
+    width:16px;
+    height:16px;
+}
+
+/* Calendar */
+
+.cal-grid{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:8px;
+    margin-top:18px;
+}
+
+.cal-dow{
+    text-align:center;
+    font-size:13px;
+    font-weight:700;
+    color:var(--plum-700);
+    padding:8px 0;
+}
+
+.cal-day{
+
+    aspect-ratio:1;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    border-radius:12px;
+
+    background:#fff;
+
+    border:1px solid var(--line-soft);
+
+    font-size:14px;
+
+    font-weight:600;
+
+    transition:.25s;
+
+    position:relative;
+
+    cursor:pointer;
+
+}
+
+.cal-day:hover{
+
+    transform:translateY(-2px);
+
+    border-color:var(--plum-300);
+
+    box-shadow:0 6px 16px rgba(0,0,0,.08);
+
+}
+
+.cal-day.muted{
+
+    background:transparent;
+
+    border:none;
+
+}
+
+.cal-day.period{
+
+    background:var(--coral-600);
+
+    color:#fff;
+
+    border:none;
+
+}
+
+.cal-day.fertile{
+
+    background:var(--sage-100);
+
+    color:var(--sage-700);
+
+    border:1px solid var(--sage-400);
+
+}
+.cal-day.ovulation{
+    background:#ffd54f;
+    color:#000;
+    border:none;
+    font-weight:700;
+}
+.cal-day.predicted{
+
+    border:2px dashed var(--coral-500);
+
+    color:var(--coral-600);
+
+    background:#fff8f7;
+
+}
+
+.cal-day.today{
+
+    border:2px solid var(--plum-700);
+
+}
+
+.cal-day.today::after{
+
+    content:"";
+
+    position:absolute;
+
+    bottom:5px;
+
+    width:6px;
+
+    height:6px;
+
+    border-radius:50%;
+
+    background:var(--plum-700);
+
+}
+
+/* Legend */
+
+.cal-legend{
+
+    display:flex;
+
+    flex-wrap:wrap;
+
+    gap:18px;
+
+    margin-top:22px;
+
+    padding-top:16px;
+
+    border-top:1px solid var(--line-soft);
+
+}
+
+.cal-legend .item{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:8px;
+
+    font-size:13px;
+
+    color:var(--ink-600);
+
+}
+
+.cal-legend .sw{
+
+    width:14px;
+
+    height:14px;
+
+    border-radius:4px;
+
+}
+.cal-legend .sw.period{
+    background:var(--coral-600);
+}
+
+.cal-legend .sw.fertile{
+    background:var(--sage-100);
+    border:1px solid var(--sage-500);
+}
+
+.cal-legend .sw.ovulation{
+    background:#ffd54f;
+}
+
+.cal-legend .sw.today{
+    border:2px solid var(--plum-700);
+    background:#fff;
+}
+/* ===========================
+   Dynamic Cycle Rows
+=========================== */
+
+#cycle-history-container{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    margin-top:14px;
+}
+
+.cycle-row{
+    display:flex;
+    gap:12px;
+    align-items:end;
+}
+
+.cycle-row .field{
+    flex:1;
+    margin-bottom:0;
+}
+
+.btn-remove-cycle{
+    flex-shrink:0;
+    margin-top:0 !important;
+}
+/* ======================
+   Prediction Cards
+====================== */
+
+#page-menstrual .card h3{
+
+    margin-bottom:14px;
+
+    color:var(--plum-900);
+
+}
+
+#page-menstrual .field{
+
+    margin-bottom:16px;
+
+}
+
+#page-menstrual textarea.input{
+
+    min-height:120px;
+
+    resize:vertical;
+
+}
+
+#page-menstrual .btn{
+
+    margin-top:8px;
+
+}
+
+#page-menstrual .grid-2{
+
+    display:grid;
+
+    grid-template-columns:1fr 1fr;
+
+    gap:14px;
+
+}
+
+#page-menstrual .grid-2 p{
+
+    margin-top:4px;
+
+    font-weight:700;
+
+    font-size:16px;
+
+    color:var(--plum-900);
+
+}
+
+#page-menstrual .grid-2 span{
+
+    font-size:13px;
+
+    color:var(--ink-500);
+
+}
+
+/* Prediction Result */
+
+#next-period-result{
+
+    color:var(--coral-600)!important;
+
+}
+
+#ovulation-result{
+
+    color:var(--sage-700)!important;
+
+}
+
+#prediction-confidence{
+    color:var(--plum-700);
+    font-weight:700;
+}
+
+/* Warning Card */
+
+#prediction-note{
+    margin-top:14px;
+    line-height:1.7;
+    color:var(--ink-600);
+}
+#page-menstrual .grid-2 p{
+    margin-top:6px;
+    font-size:17px;
+    font-weight:700;
+}
+
+#page-menstrual hr{
+    margin:18px 0;
+    border:none;
+    border-top:1px solid var(--line-soft);
+}
+
+
+/* Responsive */
+
+@media(max-width:768px){
+
+    #page-menstrual .grid-2{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .cal-grid{
+
+        gap:5px;
+
+    }
+
+    .cal-day{
+
+        font-size:12px;
+
+    }
+
+}
 /* --- Mood tracker --- */
 .mood-row { display: flex; justify-content: space-between; gap: 8px; }
 .mood-btn {

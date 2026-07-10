@@ -3,11 +3,7 @@ const User = require("../models/User");
 const ApiError = require("../utils/ApiError");
 const asyncHandler = require("../utils/asyncHandler");
 const generateToken = require("../utils/generateToken");
-
-const {
-  validateRegisterInput,
-  validateLoginInput,
-} = require("../utils/validators");
+const { validationResult } = require("express-validator");
 
 const SALT_ROUNDS = 12;
 
@@ -16,47 +12,67 @@ const SALT_ROUNDS = 12;
  * @access Public
  */
 const register = asyncHandler(async (req, res) => {
-  const { fullName, phone, password, confirmPassword } = req.body;
+  const errors = validationResult(req);
 
-  const errors = validateRegisterInput({
-    fullName,
-    phone,
-    password,
-    confirmPassword,
-  });
-
-  if (errors.length > 0) {
-    throw new ApiError(400, "Validation failed", errors);
+  if (!errors.isEmpty()) {
+    throw new ApiError(400, "Validation failed", errors.array());
   }
 
-  const normalizedPhone = phone.trim();
+  const {
+    fullName,
+    email,
+    phone,
+    password
+  } = req.body;
 
-  const existingUser = await User.findOne({ phone: normalizedPhone });
+  // Check Email
+  const emailExists = await User.findOne({
+    email: email.toLowerCase().trim(),
+  });
 
-  if (existingUser) {
-    throw new ApiError(
-      409,
-      "An account with this phone number already exists",
-      [{ field: "phone", message: "Phone number is already registered" }]
-    );
+  if (emailExists) {
+    throw new ApiError(409, "Email already registered", [
+      {
+        field: "email",
+        message: "Email already exists",
+      },
+    ]);
+  }
+
+  // Check Phone
+  const phoneExists = await User.findOne({
+    phone: phone.trim(),
+  });
+
+  if (phoneExists) {
+    throw new ApiError(409, "Phone number already registered", [
+      {
+        field: "phone",
+        message: "Phone number already exists",
+      },
+    ]);
   }
 
   const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
 
   const user = await User.create({
     fullName: fullName.trim(),
-    phone: normalizedPhone,
+    email: email.toLowerCase().trim(),
+    phone: phone.trim(),
     password: hashedPassword,
     isVerified: false,
     profileCompleted: false,
   });
 
+  const token = generateToken(user._id);
+
   res.status(201).json({
     success: true,
-    message: "Registration successful. Complete phone verification using Firebase.",
+    message: "Registration successful",
+    token,
     data: {
       userId: user._id,
-      phone: user.phone,
+      user: user.toSafeObject(),
     },
   });
 });
@@ -66,48 +82,71 @@ const register = asyncHandler(async (req, res) => {
  * @access Public
  */
 const login = asyncHandler(async (req, res) => {
-  const { phone, password } = req.body;
 
-  const errors = validateLoginInput({ phone, password });
+  const errors = validationResult(req);
 
-  if (errors.length > 0) {
-    throw new ApiError(400, "Validation failed", errors);
+  if (!errors.isEmpty()) {
+    throw new ApiError(400, "Validation failed", errors.array());
   }
 
-  const normalizedPhone = phone.trim();
 
-  const user = await User.findOne({ phone: normalizedPhone }).select("+password");
+  const { identifier, password } = req.body;
+
+const value = identifier.trim();
+
+const query = value.includes("@")
+  ? { email: value.toLowerCase() }
+  : { phone: value };
+
+const user = await User.findOne(query).select("+password");
 
   if (!user) {
-    throw new ApiError(401, "Invalid phone number or password");
+    throw new ApiError(
+      401,
+      "Invalid email/phone or password"
+    );
   }
 
-  const isPasswordMatch = await bcrypt.compare(password, user.password);
+  const match = await bcrypt.compare(
+    password,
+    user.password
+  );
 
-  if (!isPasswordMatch) {
-    throw new ApiError(401, "Invalid phone number or password");
+  if (!match) {
+    throw new ApiError(
+      401,
+      "Invalid email/phone or password"
+    );
   }
-  // TODO: Enable after Firebase Phone Authentication integration
-  // if (!user.isVerified) {
-  //   throw new ApiError(
-  //     403,
-  //     "Phone number not verified. Please verify your phone number using Firebase."
-  //   );
-  // }
 
   const token = generateToken(user._id);
 
   res.status(200).json({
     success: true,
     message: "Login successful",
+    token,
     data: {
-      token,
+      userId: user._id,
       user: user.toSafeObject(),
     },
   });
 });
 
+/**
+ * @route POST /api/auth/logout
+ * @access Private
+ */
+const logout = asyncHandler(async (req, res) => {
+
+  res.status(200).json({
+    success: true,
+    message: "Logout successful",
+  });
+
+});
+
 module.exports = {
   register,
   login,
+  logout,
 };

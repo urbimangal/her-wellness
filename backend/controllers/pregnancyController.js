@@ -1,272 +1,92 @@
 const pregnancyService = require("../services/pregnancyService");
 const validatePregnancy = require("../validators/pregnancyValidator");
-
-const TEST_USER_ID = "6a4ce83255fc73284bbbfc5b";
+const asyncHandler = require("../utils/asyncHandler");
+const ApiError = require("../utils/ApiError");
 
 // Start Pregnancy
-exports.startPregnancy = async (req, res) => {
+exports.startPregnancy = asyncHandler(async (req, res) => {
+  const errors = validatePregnancy(req.body);
 
-    try {
+  if (errors.length) {
+    throw new ApiError(400, "Validation failed", errors);
+  }
 
-        const errors = validatePregnancy(req.body);
+  const pregnancy = await pregnancyService.startPregnancy(
+    req.user._id,
+    req.body
+  );
 
-        if (errors.length) {
-
-            return res.status(400).json({
-
-                success: false,
-
-                errors,
-
-            });
-
-        }
-
-        const pregnancy = await pregnancyService.startPregnancy(
-
-            TEST_USER_ID,
-            req.body
-
-        );
-
-        res.status(201).json({
-
-            success: true,
-
-            message: "Pregnancy record created successfully.",
-
-            pregnancy,
-
-        });
-
-    }
-
-    catch (err) {
-
-        res.status(500).json({
-
-            success: false,
-
-            message: err.message,
-
-        });
-
-    }
-
-};
+  res.status(201).json({
+    success: true,
+    message: "Pregnancy record created successfully.",
+    data: pregnancy,
+  });
+});
 
 // Current Week
-exports.getCurrentWeek = async (req, res) => {
+exports.getCurrentWeek = asyncHandler(async (req, res) => {
+  const pregnancy = await pregnancyService.getCurrentWeek(req.user._id);
 
-    try {
-
-        const pregnancy = await pregnancyService.getCurrentWeek(
-
-            TEST_USER_ID
-
-        );
-
-        res.json({
-
-            success: true,
-
-            pregnancy,
-
-        });
-
-    }
-
-    catch (err) {
-
-        res.status(500).json({
-
-            success: false,
-
-            message: err.message,
-
-        });
-
-    }
-
-};
+  res.status(200).json({
+    success: true,
+    data: pregnancy,
+  });
+});
 
 // Baby Growth
-exports.getBabyGrowth = async (req, res) => {
+exports.getBabyGrowth = asyncHandler(async (req, res) => {
+  const growth = await pregnancyService.getBabyGrowth(req.user._id);
 
-    try {
-
-        const growth = await pregnancyService.getBabyGrowth(
-
-            TEST_USER_ID
-
-        );
-
-        res.json({
-
-            success: true,
-
-            growth,
-
-        });
-
-    }
-
-    catch (err) {
-
-        res.status(500).json({
-
-            success: false,
-
-            message: err.message,
-
-        });
-
-    }
-
-};
+  res.status(200).json({
+    success: true,
+    data: growth,
+  });
+});
 
 // Weekly Tips
-exports.getWeeklyTips = async (req, res) => {
+exports.getWeeklyTips = asyncHandler(async (req, res) => {
+  const tips = await pregnancyService.getWeeklyTips(req.user._id);
 
-    try {
-
-        const tips = await pregnancyService.getWeeklyTips(
-
-            TEST_USER_ID
-
-        );
-
-        res.json({
-
-            success: true,
-
-            tips,
-
-        });
-
-    }
-
-    catch (err) {
-
-        res.status(500).json({
-
-            success: false,
-
-            message: err.message,
-
-        });
-
-    }
-
-};
+  res.status(200).json({
+    success: true,
+    data: tips,
+  });
+});
 
 // Pregnancy Calendar
-exports.getCalendar = async (req, res) => {
+exports.getCalendar = asyncHandler(async (req, res) => {
+  const calendar = await pregnancyService.getCalendar(req.user._id);
 
-    try {
-
-        const calendar = await pregnancyService.getCalendar(
-
-            TEST_USER_ID
-
-        );
-
-        res.json({
-
-            success: true,
-
-            calendar,
-
-        });
-
-    }
-
-    catch (err) {
-
-        res.status(500).json({
-
-            success: false,
-
-            message: err.message,
-
-        });
-
-    }
-
-};
+  res.status(200).json({
+    success: true,
+    data: calendar,
+  });
+});
 
 // Update Pregnancy
-exports.updatePregnancy = async (req, res) => {
+exports.updatePregnancy = asyncHandler(async (req, res) => {
+  const pregnancy = await pregnancyService.updatePregnancy(
+    req.params.id,
+    req.user._id,
+    req.body
+  );
 
-    try {
-
-        const pregnancy = await pregnancyService.updatePregnancy(
-
-            req.params.id,
-
-            TEST_USER_ID,
-
-            req.body
-
-        );
-
-        res.json({
-
-            success: true,
-
-            pregnancy,
-
-        });
-
-    }
-
-    catch (err) {
-
-        res.status(500).json({
-
-            success: false,
-
-            message: err.message,
-
-        });
-
-    }
-
-};
+  res.status(200).json({
+    success: true,
+    message: "Pregnancy updated successfully.",
+    data: pregnancy,
+  });
+});
 
 // Delete Pregnancy
-exports.deletePregnancy = async (req, res) => {
+exports.deletePregnancy = asyncHandler(async (req, res) => {
+  await pregnancyService.deletePregnancy(
+    req.params.id,
+    req.user._id
+  );
 
-    try {
-
-        await pregnancyService.deletePregnancy(
-
-            req.params.id,
-
-            TEST_USER_ID
-
-        );
-
-        res.json({
-
-            success: true,
-
-            message: "Pregnancy record deleted successfully.",
-
-        });
-
-    }
-
-    catch (err) {
-
-        res.status(500).json({
-
-            success: false,
-
-            message: err.message,
-
-        });
-
-    }
-
-};
+  res.status(200).json({
+    success: true,
+    message: "Pregnancy record deleted successfully.",
+  });
+});

@@ -9,9 +9,8 @@ const ALLOWED_PROFILE_FIELDS = [
   'height',
   'weight',
   'bloodGroup',
-  'emergencyContactMother',
-  'emergencyContactFather',
-  'emergencyContactGuardian',
+  'emergencyContact1',
+  'emergencyContact2',
   'medicalConditions',
   'allergies',
 ];

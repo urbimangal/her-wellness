@@ -2,210 +2,191 @@ const Pregnancy = require("../models/Pregnancy");
 const calculatePregnancy = require("../utils/pregnancyWeekCalculator");
 const babyGrowthData = require("../utils/babyGrowthData");
 const weeklyTips = require("../utils/weeklyTips");
-// Start Pregnancy
+const ApiError = require("../utils/ApiError");
+
+/**
+ * Refresh pregnancy calculations
+ */
+const refreshPregnancyData = async (pregnancy) => {
+  const pregnancyData = calculatePregnancy(pregnancy.lastPeriodDate);
+
+  pregnancy.currentWeek = pregnancyData.currentWeek;
+  pregnancy.currentDay = pregnancyData.currentDay;
+  pregnancy.trimester = pregnancyData.trimester;
+  pregnancy.dueDate = pregnancyData.dueDate;
+
+  await pregnancy.save();
+
+  return pregnancy;
+};
+
+/**
+ * Start Pregnancy
+ */
 exports.startPregnancy = async (userId, data) => {
-    // Check if user already has an active pregnancy record
-    const existingPregnancy = await Pregnancy.findOne({
-        user: userId,
-        isPregnant: true,
-    });
+  const existingPregnancy = await Pregnancy.findOne({
+    user: userId,
+    isPregnant: true,
+  });
 
-    if (existingPregnancy) {
-        throw new Error("An active pregnancy record already exists.");
-    }
-    const pregnancyData = calculatePregnancy(
-        data.lastPeriodDate
+  if (existingPregnancy) {
+    throw new ApiError(
+      409,
+      "An active pregnancy record already exists."
     );
+  }
 
-    const pregnancy = await Pregnancy.create({
+  if (new Date(data.lastPeriodDate) > new Date()) {
+    throw new ApiError(
+      400,
+      "Last period date cannot be in the future."
+    );
+  }
 
-        user: userId,
+  const pregnancyData = calculatePregnancy(data.lastPeriodDate);
 
-        lastPeriodDate: data.lastPeriodDate,
+  const pregnancy = await Pregnancy.create({
+    user: userId,
+    lastPeriodDate: data.lastPeriodDate,
+    dueDate: pregnancyData.dueDate,
+    currentWeek: pregnancyData.currentWeek,
+    currentDay: pregnancyData.currentDay,
+    trimester: pregnancyData.trimester,
+    isPregnant: true,
+  });
 
-        dueDate: pregnancyData.dueDate,
-
-        currentWeek: pregnancyData.currentWeek,
-
-        currentDay: pregnancyData.currentDay,
-
-        trimester: pregnancyData.trimester,
-
-        isPregnant: true,
-
-    });
-
-    return pregnancy;
+  return pregnancy;
 };
 
-// Get Current Week
+/**
+ * Get Current Week
+ */
 exports.getCurrentWeek = async (userId) => {
+  const pregnancy = await Pregnancy.findOne({
+    user: userId,
+    isPregnant: true,
+  });
 
-    const pregnancy = await Pregnancy.findOne({
+  if (!pregnancy) {
+    throw new ApiError(404, "Pregnancy record not found.");
+  }
 
-        user: userId,
-
-        isPregnant: true,
-
-    });
-
-    if (!pregnancy) {
-
-        throw new Error("Pregnancy record not found.");
-
-    }
-
-    const pregnancyData = calculatePregnancy(
-        pregnancy.lastPeriodDate
-    );
-
-    pregnancy.currentWeek = pregnancyData.currentWeek;
-
-    pregnancy.currentDay = pregnancyData.currentDay;
-
-    pregnancy.trimester = pregnancyData.trimester;
-
-    pregnancy.dueDate = pregnancyData.dueDate;
-
-    await pregnancy.save();
-
-    return pregnancy;
-
+  return await refreshPregnancyData(pregnancy);
 };
 
-// Baby Growth
+/**
+ * Baby Growth
+ */
 exports.getBabyGrowth = async (userId) => {
+  const pregnancy = await Pregnancy.findOne({
+    user: userId,
+    isPregnant: true,
+  });
 
-    const pregnancy = await Pregnancy.findOne({
-        user: userId,
-        isPregnant: true,
-    });
+  if (!pregnancy) {
+    throw new ApiError(404, "Pregnancy record not found.");
+  }
 
-    if (!pregnancy) {
-        throw new Error("Pregnancy record not found.");
+  await refreshPregnancyData(pregnancy);
+
+  return (
+    babyGrowthData[pregnancy.currentWeek] || {
+      week: pregnancy.currentWeek,
+      message: "No baby growth information available.",
     }
-
-    return babyGrowthData[pregnancy.currentWeek];
-
+  );
 };
 
-// Weekly Tips
+/**
+ * Weekly Tips
+ */
 exports.getWeeklyTips = async (userId) => {
+  const pregnancy = await Pregnancy.findOne({
+    user: userId,
+    isPregnant: true,
+  });
 
-    const pregnancy = await Pregnancy.findOne({
-        user: userId,
-        isPregnant: true,
-    });
+  if (!pregnancy) {
+    throw new ApiError(404, "Pregnancy record not found.");
+  }
 
-    if (!pregnancy) {
-        throw new Error("Pregnancy record not found.");
+  await refreshPregnancyData(pregnancy);
+
+  return (
+    weeklyTips[pregnancy.currentWeek] || {
+      week: pregnancy.currentWeek,
+      tips: [],
     }
-
-    return weeklyTips[pregnancy.currentWeek];
-
+  );
 };
 
-
-// Pregnancy Calendar
+/**
+ * Pregnancy Calendar
+ */
 exports.getCalendar = async (userId) => {
+  const pregnancy = await Pregnancy.findOne({
+    user: userId,
+    isPregnant: true,
+  });
 
-    const pregnancy = await Pregnancy.findOne({
+  if (!pregnancy) {
+    throw new ApiError(404, "Pregnancy record not found.");
+  }
 
-        user: userId,
+  await refreshPregnancyData(pregnancy);
 
-        isPregnant: true,
-
-    });
-
-    if (!pregnancy) {
-
-        throw new Error("Pregnancy record not found.");
-
-    }
-
-    return {
-
-        currentWeek: pregnancy.currentWeek,
-
-        currentDay: pregnancy.currentDay,
-
-        trimester: pregnancy.trimester,
-
-        dueDate: pregnancy.dueDate,
-
-    };
-
+  return {
+    lastPeriodDate: pregnancy.lastPeriodDate,
+    dueDate: pregnancy.dueDate,
+    currentWeek: pregnancy.currentWeek,
+    currentDay: pregnancy.currentDay,
+    trimester: pregnancy.trimester,
+  };
 };
 
-// Update Pregnancy
-exports.updatePregnancy = async (
-    pregnancyId,
-    userId,
-    data
-) => {
+/**
+ * Update Pregnancy
+ */
+exports.updatePregnancy = async (pregnancyId, userId, data) => {
+  const pregnancy = await Pregnancy.findOne({
+    _id: pregnancyId,
+    user: userId,
+  });
 
-    const pregnancy = await Pregnancy.findOne({
+  if (!pregnancy) {
+    throw new ApiError(404, "Pregnancy record not found.");
+  }
 
-        _id: pregnancyId,
-
-        user: userId,
-
-    });
-
-    if (!pregnancy) {
-
-        throw new Error("Pregnancy record not found.");
-
+  if (data.lastPeriodDate) {
+    if (new Date(data.lastPeriodDate) > new Date()) {
+      throw new ApiError(
+        400,
+        "Last period date cannot be in the future."
+      );
     }
 
-    if (data.lastPeriodDate) {
+    pregnancy.lastPeriodDate = data.lastPeriodDate;
+  }
 
-        pregnancy.lastPeriodDate = data.lastPeriodDate;
-
-        const pregnancyData = calculatePregnancy(
-            data.lastPeriodDate
-        );
-
-        pregnancy.currentWeek = pregnancyData.currentWeek;
-
-        pregnancy.currentDay = pregnancyData.currentDay;
-
-        pregnancy.trimester = pregnancyData.trimester;
-
-        pregnancy.dueDate = pregnancyData.dueDate;
-
-    }
-
-    await pregnancy.save();
-
-    return pregnancy;
-
+  return await refreshPregnancyData(pregnancy);
 };
 
-// Delete Pregnancy
-exports.deletePregnancy = async (
-    pregnancyId,
-    userId
-) => {
+/**
+ * Delete Pregnancy
+ */
+exports.deletePregnancy = async (pregnancyId, userId) => {
+  const pregnancy = await Pregnancy.findOne({
+    _id: pregnancyId,
+    user: userId,
+  });
 
-    const pregnancy = await Pregnancy.findOne({
+  if (!pregnancy) {
+    throw new ApiError(404, "Pregnancy record not found.");
+  }
 
-        _id: pregnancyId,
+  await pregnancy.deleteOne();
 
-        user: userId,
-
-    });
-
-    if (!pregnancy) {
-
-        throw new Error("Pregnancy record not found.");
-
-    }
-
-    await Pregnancy.findByIdAndDelete(
-        pregnancyId
-    );
-
-    return true;
-
+  return {
+    message: "Pregnancy record deleted successfully.",
+  };
 };
